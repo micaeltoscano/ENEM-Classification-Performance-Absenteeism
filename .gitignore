@@ -3,3 +3,5 @@ Acertos_ParametrosTRI_Nota/
 Dados Limpos/
 enem_parquet/
 arquivos/
+.venv/ 
+.DS_Store
