@@ -10,8 +10,57 @@ from sklearn.tree import plot_tree
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import RocCurveDisplay
 from matplotlib import pyplot as plt
-from src import *
 
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def pre_processor_rf_dt(df, objetivo, n_samples = 1_000_000):
+
+    df = df.sample(n_samples, random_state=42)
+
+    FALTOU = (
+    (df['TP_PRESENCA_CH'] != 1) | 
+    (df['TP_PRESENCA_LC'] != 1) | 
+    (df['TP_PRESENCA_CN'] != 1) | 
+    (df['TP_PRESENCA_MT'] != 1)
+)
+
+    df['FALTOU'] = FALTOU.astype(int)
+
+    if objetivo == 'Desempenho':
+
+        df = df[df['FALTOU'] == 0]
+
+        df['MEDIA'] = (df['NU_NOTA_CN'] + df['NU_NOTA_CH'] + df['NU_NOTA_MT']+  df['NU_NOTA_LC'] + df['NU_NOTA_REDACAO']) / 5
+
+        df['CLASSE'] = df.groupby('NU_ANO')['MEDIA'].transform(lambda x: pd.qcut(x, q=2, labels=[0,1])).astype('Int64')
+
+        df['CLASSE'] = df['CLASSE'].astype(int)
+
+    df = df[df['TP_ESCOLA'].isin([2,3])]
+    df = df[df['TP_ESTADO_CIVIL'].isin([1,2,3,4])]
+
+    df['TP_LOCALIZACAO_ESC'] = df['TP_LOCALIZACAO_ESC'].fillna(0)
+    df['TP_DEPENDENCIA_ADM_ESC'] = df['TP_DEPENDENCIA_ADM_ESC'].fillna(0)
+    df['TP_SIT_FUNC_ESC'] = df['TP_SIT_FUNC_ESC'].fillna(0)
+
+    df = df.dropna(subset=[f'Q{i:03d}' for i in range(1, 26)])
+
+    df = transformar_colunas_ohe(df)
+    df = agregar_questionario(df)
+
+    colunas_q_originais = [c for c in df.columns 
+                       if c.startswith('Q') and '_' in c]
+
+    df = df.drop(
+                     columns=[
+                     'NU_NOTA_CN', 'NU_NOTA_CH', 'NU_NOTA_LC', 
+                     'NU_NOTA_MT', 'NU_NOTA_REDACAO', 
+                     'TP_LOCALIZACAO_ESC', 'TP_SIT_FUNC_ESC',
+                     'TP_PRESENCA_LC', 'TP_PRESENCA_CH',
+                     'TP_PRESENCA_CN', 'TP_PRESENCA_MT']
+                      + colunas_q_originais)
+
+    return df
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def treinar_rf(x_train, y_train, x_test, y_test, n_estimators, max_depth, max_features, min_samples_split, min_samples_leaf):
     
     rf= RandomForestClassifier(
@@ -40,39 +89,6 @@ def treinar_rf(x_train, y_train, x_test, y_test, n_estimators, max_depth, max_fe
 
     return rf
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
-def treinar_por_cor(df, cor, n_estimators, max_depth, max_features, min_samples_split, min_samples_leaf):
-    
-    df_cor = df[df['COR_LC'] == cor].copy()
-    df_cor = df_cor.dropna()
-    
-    df_cor['CLASSE'] = df_cor.groupby('NU_ANO')['TOTAL_ACERTOS_GERAL'].transform(
-        lambda x: pd.qcut(x, q=3, labels=[1, 2, 3])
-    ).astype('Int64')
-    
-    df_cor = df_cor.dropna(subset=['CLASSE'])
-    df_cor['CLASSE'] = df_cor['CLASSE'].astype(int)
-    
-    features = (
-        [f'ACERTO_LC_{i:02d}' for i in range(1, 46)] +
-        [f'ACERTO_CH_{i:02d}' for i in range(1, 46)] +
-        [f'ACERTO_CN_{i:02d}' for i in range(1, 46)] +
-        [f'ACERTO_MT_{i:02d}' for i in range(1, 46)] +
-        ['TOTAL_ACERTOS_LC', 'TOTAL_ACERTOS_CH', 'TOTAL_ACERTOS_CN', 'TOTAL_ACERTOS_MT']
-    )
-    
-    X = df_cor[features]
-    y = df_cor['CLASSE']
-    
-    x_train, x_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
-    )
-    
-    print(f'\n=== {cor} ===')
-    return treinar_rf(x_train, y_train, x_test, y_test,
-                      n_estimators, max_depth, max_features,
-                      min_samples_split, min_samples_leaf)
-
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------
 def transformar_colunas_ohe(df):
     
     colunas = [
@@ -87,16 +103,7 @@ def transformar_colunas_ohe(df):
     
     return df
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
-def calcular_acertos_por_area(df):
-    cols_questao = [c for c in df.columns if c.startswith('questao_')]
-    
-    for sigla in ['LC', 'MT', 'CH', 'CN']:
-        cols_area = [c for c in cols_questao if c.endswith(f'_{sigla}')]
-        df[f'ACERTOS_{sigla}'] = df[cols_area].sum(axis=1)
-    
-    return df
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------
-def tune_random_forest(x_train, y_train, x_test, y_test, n_iter=10, cv=3, scoring='f1_weighted', random_state=42):
+def tune_random_forest(x_train, y_train, n_iter=10, cv=3, scoring='f1_weighted', random_state=42):
     
     n_estimators = [int(x) for x in np.linspace(start=50, stop=100, num=6)]
     max_features = ['sqrt', 'log2']
@@ -211,3 +218,4 @@ def agregar_questionario(df):
     df['acesso_internet']   = df['acesso_internet'].map({'A':0,'B':1})
 
     return df
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
