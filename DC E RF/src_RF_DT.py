@@ -101,13 +101,12 @@ def transformar_colunas_ohe(df):
     
     return df
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
-def tune_random_forest(x_train, y_train, n_iter=10, cv=3, scoring='f1_weighted', random_state=42):
+def tune_random_forest(x_train, y_train, n_iter=10, cv=5, scoring='f1_weighted', random_state=42):
     
     n_estimators = [int(x) for x in np.linspace(start=50, stop=100, num=6)]
     max_features = ['sqrt', 'log2']
     max_depth = [int(x) for x in np.linspace(start=10, stop=40, num=4)]
     max_depth.append(None)
-
     param_grid = {
         'n_estimators':      n_estimators,
         'max_features':      max_features,
@@ -117,15 +116,13 @@ def tune_random_forest(x_train, y_train, n_iter=10, cv=3, scoring='f1_weighted',
     }
 
     rf = RandomForestClassifier(class_weight='balanced', random_state=random_state)
-    cv_rf = RandomizedSearchCV(
+    cv_rf = GridSearchCV(
         estimator=rf,
-        param_distributions=param_grid,
-        n_iter=n_iter,
+        param_grid=param_grid,
         cv=cv,
         scoring=scoring,
         verbose=2,
-        n_jobs=-1,
-        random_state=random_state
+        n_jobs=-1
     )
 
     cv_rf.fit(x_train, y_train)
