@@ -1,11 +1,8 @@
 import pandas as pd
-import numpy as np
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, MinMaxScaler
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 from sklearn.compose import ColumnTransformer
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras import regularizers
-from tensorflow.keras.optimizers import Adam
+
+
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def pre_processor_SVM(df, objetivo, n_samples = 50000):
