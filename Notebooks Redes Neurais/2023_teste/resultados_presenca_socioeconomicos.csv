@@ -1,0 +1,19 @@
+params,mean_accuracy
+"{'neurons': 191, 'learning_rate': 0.01, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.1, 'dropout': 0.2}",0.7186954975128174
+"{'neurons': 191, 'learning_rate': 0.001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.1, 'dropout': 0.0}",0.7067013263702393
+"{'neurons': 191, 'learning_rate': 0.01, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.01, 'dropout': 0.0}",0.702064037322998
+"{'neurons': 191, 'learning_rate': 0.01, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.001, 'dropout': 0.0}",0.7013055920600891
+"{'neurons': 191, 'learning_rate': 0.001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.1, 'dropout': 0.2}",0.7007205128669739
+"{'neurons': 191, 'learning_rate': 0.01, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.001, 'dropout': 0.2}",0.6986510634422303
+"{'neurons': 191, 'learning_rate': 0.01, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.1, 'dropout': 0.0}",0.6945013284683228
+"{'neurons': 191, 'learning_rate': 0.001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.01, 'dropout': 0.2}",0.6918576240539551
+"{'neurons': 191, 'learning_rate': 0.01, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.01, 'dropout': 0.2}",0.688184630870819
+"{'neurons': 191, 'learning_rate': 0.001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.01, 'dropout': 0.0}",0.6860934972763062
+"{'neurons': 191, 'learning_rate': 0.001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.001, 'dropout': 0.2}",0.6749769806861877
+"{'neurons': 191, 'learning_rate': 0.0001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.1, 'dropout': 0.2}",0.673340904712677
+"{'neurons': 191, 'learning_rate': 0.0001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.01, 'dropout': 0.0}",0.6694187164306641
+"{'neurons': 191, 'learning_rate': 0.0001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.01, 'dropout': 0.2}",0.6691261649131774
+"{'neurons': 191, 'learning_rate': 0.001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.001, 'dropout': 0.0}",0.667641794681549
+"{'neurons': 191, 'learning_rate': 0.0001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.001, 'dropout': 0.0}",0.6666666507720947
+"{'neurons': 191, 'learning_rate': 0.0001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.1, 'dropout': 0.0}",0.6626794457435607
+"{'neurons': 191, 'learning_rate': 0.0001, 'batch_size': 64, 'epochs': 100, 'l2_reg': 0.001, 'dropout': 0.2}",0.6574354052543641
