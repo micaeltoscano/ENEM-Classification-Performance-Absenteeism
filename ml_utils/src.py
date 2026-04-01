@@ -11,6 +11,8 @@ from tensorflow.keras.layers import Dense, Dropout, Input
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
 
+from scipy.stats import norm
+import random
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def transformar_colunas_ohe(df):
     
@@ -149,12 +151,6 @@ def preparar_dados(df, objetivo, n_samples = 50_000):
 
         df['MEDIA'] = (df['NU_NOTA_CN'] + df['NU_NOTA_CH'] + df['NU_NOTA_MT']+  df['NU_NOTA_LC'] + df['NU_NOTA_REDACAO']) / 5
 
-        df['CLASSE'] = df.groupby('NU_ANO')['MEDIA'].transform(lambda x: pd.qcut(x, q=2, labels=[0,1])).astype('Int64')
-
-        df['CLASSE'] = df['CLASSE'].astype(int)
-
-    df = df[df['TP_ESCOLA'].isin([2,3])]
-    df = df[df['TP_ESTADO_CIVIL'].isin([1,2,3,4])]
 
     df['TP_LOCALIZACAO_ESC'] = df['TP_LOCALIZACAO_ESC'].fillna(0)
     df['TP_DEPENDENCIA_ADM_ESC'] = df['TP_DEPENDENCIA_ADM_ESC'].fillna(0)
@@ -231,7 +227,7 @@ def pre_processor(X_train):
     preprocessor = ColumnTransformer(transformers=[
         ('nominal',      OneHotEncoder(handle_unknown='ignore', sparse_output=False), nominais),
         ('ordinal',      OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1), ordinais),
-        ('questionario', OrdinalEncoder(categories=categorias_quest, handle_unknown='use_encoded_value', unknown_value=-1), questionario),
+        ('questionario',  OneHotEncoder(handle_unknown='ignore', sparse_output=False), questionario),
         ('binaria',      'passthrough', binarias),
     ], remainder='drop')
 
@@ -265,23 +261,143 @@ def num_max_neuronio(X, d):
     CT = len(X)
     return int((CT - 10)/(10 * (d + 2)))
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def dt_amostras_maiores():
+def pre_processor_inferencia(df):
+
+    df = df.copy()
+
+    df['TP_LOCALIZACAO_ESC']     = df['TP_LOCALIZACAO_ESC'].fillna(0) if 'TP_LOCALIZACAO_ESC' in df.columns else 0
+    df['TP_DEPENDENCIA_ADM_ESC'] = df['TP_DEPENDENCIA_ADM_ESC'].fillna(0)
+    df['TP_SIT_FUNC_ESC']        = df['TP_SIT_FUNC_ESC'].fillna(0) if 'TP_SIT_FUNC_ESC' in df.columns else 0
+
+    df = transformar_colunas_ohe(df)
+
+    colunas_esperadas = (
+        [f'Q001_{l}' for l in 'ABCDEFGH'] +
+        [f'Q002_{l}' for l in 'ABCDEFGH'] +
+        [f'Q003_{l}' for l in 'ABCDEF'] +
+        [f'Q004_{l}' for l in 'ABCDEF'] +
+        [f'Q006_{l}' for l in 'ABCDEFGHIJKLMNOPQ'] +
+        [f'Q007_{l}' for l in 'ABCD'] +
+        [f'Q008_{l}' for l in 'ABCDE'] +
+        [f'Q009_{l}' for l in 'ABCDE'] +
+        [f'Q010_{l}' for l in 'ABCDE'] +
+        [f'Q011_{l}' for l in 'ABCDE'] +
+        [f'Q012_{l}' for l in 'ABCDE'] +
+        [f'Q013_{l}' for l in 'ABCDE'] +
+        [f'Q024_{l}' for l in 'ABCDE'] +
+        [f'Q025_{l}' for l in 'AB']
+    )
+    for col in colunas_esperadas:
+        if col not in df.columns:
+            df[col] = 0
+
+    df = agregar_questionario(df)
+
+    colunas_q_originais = [c for c in df.columns if c.startswith('Q') and '_' in c]
+    df = df.drop(columns=colunas_q_originais, errors='ignore')
+
+    colunas_modelo = [
+        'Q005', 'TP_FAIXA_ETARIA', 'TP_ESTADO_CIVIL', 'TP_ESCOLA',
+        'TP_ST_CONCLUSAO', 'IN_TREINEIRO',  'TP_LOCALIZACAO_ESC',
+        'TP_SIT_FUNC_ESC', 'TP_DEPENDENCIA_ADM_ESC',
+        'escolaridade_pai', 'escolaridade_mae', 'escolaridade_pais_max',
+        'ocupacao_pai', 'ocupacao_mae', 'renda_familiar',
+        'score_bens_servicos', 'score_bens_dom',
+        'score_equipamentos', 'score_estrutura_casa',
+        'acesso_computador', 'acesso_internet'
+    ]
+
+    return df[colunas_modelo]
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def gerar_aluno_aleatorio():
     
-    df = preparar_dados(df, objetivo = 'Desempenho', n_samples = 50_000)
+    return {
+        'Q001': random.choice(list('ABCDEFGH')),
+        'Q002': random.choice(list('ABCDEFGH')),
+        'Q003': random.choice(list('ABCDEF')),
+        'Q004': random.choice(list('ABCDEF')),
+        'Q005': random.randint(1,20),
+        'Q006': random.choice(list('ABCDEFGHIJKLMNOPQ')),
+        'Q007': random.choice(list('ABCD')),
+        'Q008': random.choice(list('ABCDE')),
+        'Q009': random.choice(list('ABCDE')),
+        'Q010': random.choice(list('ABCDE')),
+        'Q011': random.choice(list('ABCDE')),
+        'Q012': random.choice(list('ABCDE')),
+        'Q013': random.choice(list('ABCDE')),
+        'Q014': random.choice(list('ABCDE')),
+        'Q015': random.choice(list('ABCDE')),
+        'Q016': random.choice(list('ABCDE')),
+        'Q017': random.choice(list('ABCDE')),
+        'Q018': random.choice(list('ABCDE')),
+        'Q019': random.choice(list('ABCDE')),
+        'Q020': random.choice(list('ABCDE')),
+        'Q021': random.choice(list('ABCDE')),
+        'Q022': random.choice(list('ABCDE')),
+        'Q023': random.choice(list('ABCDE')),
+        'Q024': random.choice(list('ABCDE')),
+        'Q025': random.choice(list('AB')),
+        'TP_FAIXA_ETARIA':        random.randint(1, 10),
+        'TP_ESTADO_CIVIL':        random.randint(1, 4),
+        'TP_ESCOLA':              random.randint(1, 3),
+        'TP_ST_CONCLUSAO':        random.randint(1, 4),
+        'IN_TREINEIRO':           random.choice([0, 1]),
+        'TP_DEPENDENCIA_ADM_ESC': random.randint(1, 4),
+        'TP_LOCALIZACAO_ESC':     random.choice([1, 2]),
+        'TP_SIT_FUNC_ESC':        random.randint(1, 3),
+    }
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def chances_por_curso(prob_acima: float, desvio=0.10):
+    
+    cursos = {
+    'Ciência de Dados e IA' : 0.97, 
+    'Medicina'              : 0.94,
+    'Computação'            : 0.88,
+    'Engenharia'            : 0.70,
+    'Administração'         : 0.65,
+    'Pedagogia'             : 0.54,
+    'Licenciaturas'         : 0.53,
+    'Tecnólogos'            : 0.49,
+    'Cursos noturnos'       : 0.42,
+    'Gastronomia'           : 0.38
+}
+    resultado = {}
+    for curso, percentil_corte in cursos.items():
+        
+        z = (prob_acima - percentil_corte) / desvio
+        chance = norm.cdf(z)
+        resultado[curso] = f'{chance:.1%}'
+        
+    return resultado
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def pipeline_aluno(dt_presenca, dt_desempenho, dados_aluno = None):
+    
+    if dados_aluno is None:
+        dados_aluno = gerar_aluno_aleatorio()
 
-    X = df.drop(columns=['MEDIA', 'FALTOU'])
-    y_media = df['MEDIA']
+    df = pd.DataFrame([dados_aluno])
+    X  = pre_processor_inferencia(df)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y_media, test_size=0.2, random_state=42)
+    prob_falta = dt_presenca.predict_proba(X)[0]
+    faltou     = dt_presenca.predict(X)[0]
 
-    quantil = y_train.quantile(0.5)
-    y_train = (y_train >= quantil).astype(int)
-    y_test  = (y_test  >= quantil).astype(int)
+    prob_desempenho = dt_desempenho.predict_proba(X)[0]
+    desempenho      = dt_desempenho.predict(X)[0]
 
-    clf = DecisionTreeClassifier(**CV_clf.best_params_)
-    clf.fit(X_train, y_train)
+    perfis = {
+        (0, 1): 'Vai e performa bem',
+        (0, 0): 'Vai mas precisa de apoio',
+        (1, 1): 'Potencial desperdiçado',
+        (1, 0): 'Alto risco geral',
+    }
 
-    print('Ein: %0.4f' % (1 - accuracy_score(y_train, CV_clf.predict(X_train))))
-    print('Eval: %0.4f' % (1 - accuracy_score(y_test, CV_clf.predict(X_test))))
-
-    print(classification_report(y_test, clf.predict(X_test)))
+    return {
+        'situacao':      'ausente' if faltou == 1 else 'presente',
+        'prob_presente': f'{prob_falta[0]:.1%}',
+        'prob_ausente':  f'{prob_falta[1]:.1%}',
+        'desempenho':    'acima da mediana' if desempenho == 1 else 'abaixo da mediana',
+        'prob_acima':    f'{prob_desempenho[1]:.1%}',
+        'prob_abaixo':   f'{prob_desempenho[0]:.1%}',
+        'perfil':        perfis[(faltou, desempenho)],
+        'chances_curso': chances_por_curso(prob_desempenho[1])
+    }

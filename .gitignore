@@ -32,3 +32,4 @@ ml_utils.egg-info/
 ml_utils/config.py
 ml_utils/config.py
 *.parquet
+ml_utils.egg-info/
