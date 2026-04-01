@@ -265,3 +265,51 @@ def num_max_neuronio(X, d):
     CT = len(X)
     return int((CT - 10)/(10 * (d + 2)))
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def pre_processor_inferencia(df):
+
+    df = df.copy()
+
+    df['TP_LOCALIZACAO_ESC']     = df['TP_LOCALIZACAO_ESC'].fillna(0) if 'TP_LOCALIZACAO_ESC' in df.columns else 0
+    df['TP_DEPENDENCIA_ADM_ESC'] = df['TP_DEPENDENCIA_ADM_ESC'].fillna(0)
+    df['TP_SIT_FUNC_ESC']        = df['TP_SIT_FUNC_ESC'].fillna(0) if 'TP_SIT_FUNC_ESC' in df.columns else 0
+
+    df = transformar_colunas_ohe(df)
+
+    # Garante todas as colunas OHE que agregar_questionario espera
+    colunas_esperadas = (
+        [f'Q001_{l}' for l in 'ABCDEFGH'] +
+        [f'Q002_{l}' for l in 'ABCDEFGH'] +
+        [f'Q003_{l}' for l in 'ABCDEF'] +
+        [f'Q004_{l}' for l in 'ABCDEF'] +
+        [f'Q006_{l}' for l in 'ABCDEFGHIJKLMNOPQ'] +
+        [f'Q007_{l}' for l in 'ABCD'] +
+        [f'Q008_{l}' for l in 'ABCDE'] +
+        [f'Q009_{l}' for l in 'ABCDE'] +
+        [f'Q010_{l}' for l in 'ABCDE'] +
+        [f'Q011_{l}' for l in 'ABCDE'] +
+        [f'Q012_{l}' for l in 'ABCDE'] +
+        [f'Q013_{l}' for l in 'ABCDE'] +
+        [f'Q024_{l}' for l in 'ABCDE'] +
+        [f'Q025_{l}' for l in 'AB']
+    )
+    for col in colunas_esperadas:
+        if col not in df.columns:
+            df[col] = 0
+
+    df = agregar_questionario(df)
+
+    colunas_q_originais = [c for c in df.columns if c.startswith('Q') and '_' in c]
+    df = df.drop(columns=colunas_q_originais, errors='ignore')
+
+    colunas_modelo = [
+        'Q005', 'TP_FAIXA_ETARIA', 'TP_ESTADO_CIVIL', 'TP_ESCOLA',
+        'TP_ST_CONCLUSAO', 'IN_TREINEIRO',  'TP_LOCALIZACAO_ESC',
+        'TP_SIT_FUNC_ESC', 'TP_DEPENDENCIA_ADM_ESC',
+        'escolaridade_pai', 'escolaridade_mae', 'escolaridade_pais_max',
+        'ocupacao_pai', 'ocupacao_mae', 'renda_familiar',
+        'score_bens_servicos', 'score_bens_dom',
+        'score_equipamentos', 'score_estrutura_casa',
+        'acesso_computador', 'acesso_internet'
+    ]
+
+    return df[colunas_modelo]
